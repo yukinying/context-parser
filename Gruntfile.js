@@ -14,9 +14,25 @@ module.exports = function(grunt) {
         camelcase: true
       }
     },
+    benchmark: {
+      all: {
+        src: ['tests/benchmarks/simplehtml.js'],
+      }
+    },
+    browserify: {
+      standalone: {
+        src: [ 'src/<%= pkg.name %>.js' ],
+        dest: 'dist/<%= pkg.name %>.js',
+        options: {
+          browserifyOptions: {
+            standalone: 'ContextParser'
+          }
+        }
+      }
+    },    
     mocha_istanbul: {
       target: {
-        src: 'tests/unit',
+        src: 'tests/unit/*.js',
         options: {
           coverage:true,
           check: {
@@ -32,10 +48,13 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.loadNpmTasks('grunt-mocha-istanbul');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-benchmark');
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-mocha-istanbul');
 
   grunt.registerTask('test', ['clean:buildResidues', 'jshint', 'mocha_istanbul']);
-  grunt.registerTask('default', ['test']);
+  grunt.registerTask('dist', ['browserify'])
+  grunt.registerTask('default', ['test', 'dist']);
 };

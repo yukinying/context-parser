@@ -1,25 +1,45 @@
-HTML5 Context Parser 
+HTML5 Context Parser
 ====================
+HTML5 Context Parser is a robust and small footprint HTML5 context parser that parses HTML 5 web pages and reports the execution context of each character seen.
 
-HTML5 Context Parser - a fast and small footprint HTML5 context parser! It parses the HTML 5 web page and analyzes the execution context of each character for you!
+[![npm version][npm-badge]][npm]
+[![dependency status][dep-badge]][dep-status]
+
+[npm]: https://www.npmjs.org/package/context-parser
+[npm-badge]: https://img.shields.io/npm/v/context-parser.svg?style=flat-square
+[dep-status]: https://david-dm.org/yahoo/context-parser
+[dep-badge]: https://img.shields.io/david/yahoo/context-parser.svg?style=flat-square
 
 ## Overview
 
-- *Execution Context:* This is the important concept for the browser in which to determine what kind of parsers, like URI, CSS and JavaScript to be applied on the character (i.e. context) in the HTML5 web page.
-- *Cross Site Scripting* In order to defend against XSS, input validation/filtering is the right way to do. However, the correct filtering rules depends on the execution context of the HTML5 page, and developers always pick the wrong filter as it is far more complex than we expect! This context parser is a fast and small footprint HTML5 context parser to analyze the execution context of the HTML5 page.
+### Execution Context
 
-## Designs
+Browsers use Javascript and CSS engine in order to construct the dynamic components of a page correctly. In order to determine which engine should be used, browsers use HTML parsing algorithm to determine the **context** of HTML blocks (aka tokens).  
 
-- *Standard Compliant:* Our parser is built based on the specification of <a href="https://html.spec.whatwg.org/multipage/">WHATWG</a>.
-- *Simplification:* We are only interested in analyzing the execution context of the HTML5 page, so we don't need to implement all the processes as defined in the specification, we focus on the <a href="https://html.spec.whatwg.org/multipage/syntax.html#tokenization">Tokenization</a> process in the parsing model and states related to XSS.
-  - Handling less process as the full browser! We don't handle AST tree building, parser error, rendering etc.
-  - Handling less state if we focus on XSS, not all the states make sense to be output context for web development.
+### Cross Site Scripting 
+
+Cross site scripting (XSS) can be prevented when input validation and filtering is performed aggressively such that it should remove all possible characters that could trigger changes in execution context in HTML. However, this has often proven as developer unfriendly and error prone. 
+
+The other way to solve XSS is to apply the filtering at the time the output is rendered, and just remove the characters that would trigger changes in context based on the current context in the HTML. 
+
+## Design Principles 
+
+### Secure
+
+Parser need to be aligning with browser [specification](http://www.w3.org/TR/html5/), in order to determine context accurately. One single parsing mistake would result in security exploit. 
+
+### Keep It Simple and Straightforward
+
+Keeping code simple and straightforward allows easier code review. Moreover, that would allow smaller compilation time (or JS code loading time in browser client side). 
+
+Since we are only interested in analyzing the execution context of the HTML5 page, we focused on the [tokenization process](http://www.w3.org/TR/html5/syntax.html#tokenization) and dropped other parts that are not related to context parsing logics.
+
 
 ## Quick Start
 
 Install the npm context-parser from the npm repo.
 ```
-npm install context-parser
+npm install -g context-parser
 ```
 
 ### Server-side (nodejs)
@@ -41,9 +61,9 @@ parser.contextualize(data);
 
 ### Server-side (command line)
 
-Run against the HTML5 file with our parser and the <a href="https://html.spec.whatwg.org/multipage/syntax.html#tokenization">state defined in HTML 5 Specification</a> of each character is printed out!
+Run against the HTML5 file with our parser and the state defined in [HTML 5 Specification](http://www.w3.org/TR/html5/syntax.html#tokenization) and print out the state of each character.
 ```
-./bin/contextparse <html file>
+./bin/context-dump <html file> <input preprocessing:0|1> <canonicalization:0|1>
   HTML-State { statesSize: 819 } +0ms
   HTML-State { ch: 0, state: 1, symbol: 0 } +1ms
   HTML-State { ch:   [0x20], state: 1, symbol: 0 } +1ms
@@ -54,12 +74,12 @@ Run against the HTML5 file with our parser and the <a href="https://html.spec.wh
 ...
 ```
 
-The contextparse reports back the execution context of each character in the format explained below.
+It reports back the execution context of each character in the format explained below.
 ```
-{ch:<Character>,state:<Execution Context Number>,symbol:<Symbol Type>}
+{ch: <Character>, state: <Execution Context Number>, symbol: <Symbol Type>}
 ```
 
-For the execution context number and character type, please refer to the state number defined in the <a href="https://html.spec.whatwg.org/multipage/syntax.html#tokenization">HTM 5 Specification</a> and src/html5-state-machine.js.
+For the execution context number and character type, please refer to the state number defined in the [specification](http://www.w3.org/TR/html5/syntax.html#tokenization) and [our code](src/html5-state-machine.js).
 
 ## Development
 
@@ -83,3 +103,9 @@ This software is free to use under the Yahoo Inc. BSD license.
 See the [LICENSE file][] for license text and copyright information.
 
 [LICENSE file]: ./LICENSE
+
+## Related Works
+
+* [parse5](https://github.com/inikulin/parse5) is an HTML5 compliant parser implemented in native javascript. It is used by [jsdom](https://github.com/tmpvar/jsdom) as the underlying HTML parsing engine. Parse5 has a larger code base and it exposes the parsing tree instead of execution context thus it may require some patching or trimming in order to provide context parsing functionality. 
+
+* [htmlparser2](https://github.com/fb55/htmlparser2) is another HTML parser implemented in native javascript. It is used by [cheerio](https://github.com/cheeriojs/cheerio) as the underlying HTML parsing engine. HTMLparser2 is not a fully compliant parser thus it is less desirable to be used for application security related work.
